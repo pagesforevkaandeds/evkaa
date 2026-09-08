@@ -199,13 +199,13 @@
             <div id="musicContent" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
                 
-                <!-- Кастомный плеер -->
+                <!-- Кастомный плеер с громкостью 50% по умолчанию -->
                 <div class="custom-player">
                     <div class="player-controls-row">
                         <button class="btn-music-play" id="musicBtn">▶</button>
                         <div class="player-volume-wrapper">
                             <span>🔊</span>
-                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="0.5">
                         </div>
                     </div>
                 </div>
@@ -245,7 +245,6 @@ const SHAPES = [
     [[1, 1, 1], [1, 0, 0], [1, 0, 0]]
 ];
 
-// Нормальное симметричное сердечко
 const HEART_SHAPE = {
     matrix: [
         [0, 1, 0, 1, 0],
@@ -273,6 +272,9 @@ const restartBtn = document.getElementById('restartBtn');
 const musicBtn = document.getElementById('musicBtn');
 const volumeSlider = document.getElementById('volumeSlider');
 const bgAudio = document.getElementById('bgAudio');
+
+// Устанавливаем громкость аудио на 50% при старте
+bgAudio.volume = 0.5;
 
 canvas.width = GRID_SIZE * CELL_SIZE;
 canvas.height = GRID_SIZE * CELL_SIZE;
