@@ -25,28 +25,48 @@
             touch-action: none;
         }
         .header {
-            margin-top: 15px;
+            margin-top: 10px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
         }
         .score-board {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #ff5f95;
             letter-spacing: 1px;
             background: rgba(255, 255, 255, 0.05);
-            padding: 8px 20px;
+            padding: 6px 18px;
             border-radius: 12px;
-            display: inline-block;
-            margin-bottom: 5px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        /* Постоянная панель громкости наверху, чтобы она ВСЕГДА была видна */
+        .top-volume-panel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 5px 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .volume-slider {
+            width: 100px;
+            accent-color: #ffcc00;
+            cursor: pointer;
+        }
+
         .game-container {
             position: relative;
             background-color: #28283c;
             border-radius: 16px;
             padding: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 15px;
+            margin: 10px 0;
         }
         canvas {
             display: block;
@@ -57,16 +77,16 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            width: 360px;
-            height: 120px;
+            width: 336px;
+            height: 110px;
             background-color: #28283c;
             border-radius: 16px;
             padding: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .dock-slot {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -78,7 +98,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.92);
             backdrop-filter: blur(6px);
             border-radius: 16px;
             display: flex;
@@ -100,62 +120,29 @@
             font-size: 14px;
             font-weight: bold;
             color: #ff5f95;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
             line-height: 1.4;
             padding: 0 10px;
         }
-
         .music-prompt {
             font-size: 13px;
             font-weight: bold;
             color: #ffcc00;
-            margin-bottom: 8px;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        .music-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
             margin-bottom: 10px;
+            text-align: center;
         }
-
         .btn-music {
             background-color: #3b3b58;
             color: #ffcc00;
             border: 2px solid #ffcc00;
-            padding: 7px 16px;
-            font-size: 12px;
+            padding: 8px 18px;
+            font-size: 13px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.1s, background-color 0.2s;
         }
-        .btn-music:active {
-            transform: scale(0.95);
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: #fff;
-            background: rgba(255,255,255,0.08);
-            padding: 6px 14px;
-            border-radius: 10px;
-            margin-top: 5px;
-        }
-        .volume-slider {
-            width: 110px;
-            accent-color: #ffcc00;
-            cursor: pointer;
-        }
-
         .btn-restart {
             background-color: #ff5f95;
             color: white;
@@ -166,10 +153,6 @@
             border-radius: 12px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(255, 95, 149, 0.4);
-            transition: transform 0.1s;
-        }
-        .btn-restart:active {
-            transform: scale(0.95);
         }
     </style>
 </head>
@@ -179,6 +162,11 @@
 
     <div class="header">
         <div class="score-board" id="scoreDisplay">СЧЕТ: 0</div>
+        <!-- Ползунок вынесен наверх, чтобы он гарантированно отображался -->
+        <div class="top-volume-panel">
+            <span>🔊 Громкость:</span>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+        </div>
     </div>
 
     <div class="game-container" id="gameContainer">
@@ -189,17 +177,9 @@
             
             <div id="musicContent" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
-                <div class="music-controls">
-                    <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
-                </div>
+                <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
             </div>
 
-            <!-- Ползунок громкости теперь всегда виден на экране победы/поражения -->
-            <div class="volume-container">
-                <span>🔊 Громкость:</span>
-                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
-            </div>
-            <br>
             <button class="btn-restart" id="restartBtn">ЗАНОВО</button>
         </div>
     </div>
@@ -214,12 +194,7 @@
 const GRID_SIZE = 8;
 const CELL_SIZE = 42;
 const COLORS = [
-    '#ff5f95',
-    '#5fb4ff',
-    '#5fff8c',
-    '#ffd75f',
-    '#c35fff',
-    '#ff8c5f'
+    '#ff5f95', '#5fb4ff', '#5fff8c', '#ffd75f', '#c35fff', '#ff8c5f'
 ];
 
 const SHAPES = [
@@ -287,7 +262,7 @@ musicBtn.addEventListener('click', () => {
     if (bgAudio.paused) {
         bgAudio.play().then(() => {
             musicBtn.innerText = "⏸ Пауза";
-        }).catch(e => console.log("Ошибка воспроизведения:", e));
+        }).catch(e => console.log("Ошибка:", e));
     } else {
         bgAudio.pause();
         musicBtn.innerText = "🎵 Включить песню";
@@ -368,20 +343,20 @@ function renderDock() {
         if (!shapeObj) continue;
 
         const subCanvas = document.createElement('canvas');
-        subCanvas.width = 90;
-        subCanvas.height = 90;
+        subCanvas.width = 80;
+        subCanvas.height = 80;
         const subCtx = subCanvas.getContext('2d');
         
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
-        const miniCell = shapeObj.isHeart ? 14 : 20;
+        const miniCell = shapeObj.isHeart ? 13 : 18;
         
-        let startX = (90 - cols * miniCell) / 2;
-        let startY = (90 - rows * miniCell) / 2;
+        let startX = (80 - cols * miniCell) / 2;
+        let startY = (80 - rows * miniCell) / 2;
 
         subCtx.fillStyle = '#1e1e2d';
-        subCtx.fillRect(0,0,90,90);
+        subCtx.fillRect(0, 0, 80, 80);
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -403,7 +378,7 @@ function renderDock() {
 let fnCanPlace = function(matrix, row, col) {
     let rows = matrix.length;
     let cols = matrix[0].length;
-    if (row + rows > GRID_SIZE || col + cols > GRID_SIZE) return false;
+    if (row < 0 || col < 0 || row + rows > GRID_SIZE || col + cols > GRID_SIZE) return false;
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             if (matrix[r][c] === 1 && grid[row + r][col + c] !== 0) {
@@ -447,27 +422,25 @@ function initDragAndDrop(element, shapeObj) {
         isDragging = true;
         element.style.opacity = '0';
 
-        // Создаем плавающий холст с чистой фигурой (без рамок слота и фона)
         dragGhost = document.createElement('canvas');
-        dragGhost.width = 120;
-        dragGhost.height = 120;
+        dragGhost.width = 140;
+        dragGhost.height = 140;
         const gCtx = dragGhost.getContext('2d');
 
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
-        // Используем размер ячеек, приближенный к игровому полю для красоты
-        const ghostCell = shapeObj.isHeart ? 16 : 28;
+        const ghostCell = CELL_SIZE; // Рисуем строго в масштабе игровых клеток
         
-        let startX = (120 - cols * ghostCell) / 2;
-        let startY = (120 - rows * ghostCell) / 2;
+        let startX = (140 - cols * ghostCell) / 2;
+        let startY = (140 - rows * ghostCell) / 2;
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 if (matrix[r][c] === 1) {
                     gCtx.fillStyle = shapeObj.color;
                     gCtx.beginPath();
-                    gCtx.roundRect(startX + c * ghostCell + 2, startY + r * ghostCell + 2, ghostCell - 4, ghostCell - 4, 6);
+                    gCtx.roundRect(startX + c * ghostCell + 3, startY + r * ghostCell + 3, ghostCell - 6, ghostCell - 6, 6);
                     gCtx.fill();
                 }
             }
@@ -476,8 +449,8 @@ function initDragAndDrop(element, shapeObj) {
         dragGhost.style.position = 'fixed';
         dragGhost.style.zIndex = '1000';
         dragGhost.style.pointerEvents = 'none';
-        // Поднимаем фигуру выше пальца/курсора, чтобы она не закрывалась рукой
-        dragGhost.style.transform = 'translate(-50%, -120%)';
+        // Смещаем плавающий элемент выше пальца, чтобы фигура была полностью видна
+        dragGhost.style.transform = 'translate(-50%, -130%)';
         document.body.appendChild(dragGhost);
 
         moveAt(clientX, clientY);
@@ -489,24 +462,21 @@ function initDragAndDrop(element, shapeObj) {
         dragGhost.style.top = clientY + 'px';
 
         const boardRect = canvas.getBoundingClientRect();
-        // Учитываем смещение по вертикали для точного попадания в сетку
+        // Точный расчет координат относительно игровой доски
         let x = clientX - boardRect.left;
-        let y = (clientY - 70) - boardRect.top;
+        let y = clientY - boardRect.top - 60; // Компенсация смещения пальца
 
-        let cellPx = CELL_SIZE;
-        let col = Math.floor(x / cellPx);
-        let row = Math.floor(y / cellPx);
+        let col = Math.floor(x / CELL_SIZE);
+        let row = Math.floor(y / CELL_SIZE);
 
         col -= Math.floor(shapeObj.matrix[0].length / 2);
         row -= Math.floor(shapeObj.matrix.length / 2);
 
-        if (x >= -20 && x <= boardRect.width + 20 && y >= -20 && y <= boardRect.height + 20) {
-            if (fnCanPlace(shapeObj.matrix, row, col)) {
-                renderBoard(shapeObj.matrix, row, col, shapeObj.color);
-                return;
-            }
+        if (fnCanPlace(shapeObj.matrix, row, col)) {
+            renderBoard(shapeObj.matrix, row, col, shapeObj.color);
+        } else {
+            renderBoard();
         }
-        renderBoard();
     }
 
     function endDrag(clientX, clientY) {
@@ -520,66 +490,61 @@ function initDragAndDrop(element, shapeObj) {
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = (clientY - 70) - boardRect.top;
-        let cellPx = CELL_SIZE;
-        let col = Math.floor(x / cellPx);
-        let row = Math.floor(y / cellPx);
+        let y = clientY - boardRect.top - 60;
+
+        let col = Math.floor(x / CELL_SIZE);
+        let row = Math.floor(y / CELL_SIZE);
 
         col -= Math.floor(shapeObj.matrix[0].length / 2);
         row -= Math.floor(shapeObj.matrix.length / 2);
 
-        if (x >= -20 && x <= boardRect.width + 20 && y >= -20 && y <= boardRect.height + 20) {
-            if (fnCanPlace(shapeObj.matrix, row, col)) {
+        if (fnCanPlace(shapeObj.matrix, row, col)) {
+            if (shapeObj.isHeart) {
+                isGameWon = true;
+                score = 1200000;
+                updateScore();
                 
-                if (shapeObj.isHeart) {
-                    isGameWon = true;
-                    score = 1200000;
-                    updateScore();
-                    
-                    for (let r = 0; r < shapeObj.matrix.length; r++) {
-                        for (let c = 0; c < shapeObj.matrix[r].length; c++) {
-                            if (shapeObj.matrix[r][c] === 1) {
-                                grid[row + r][col + c] = shapeObj.color;
-                            }
-                        }
-                    }
-                    renderBoard();
-
-                    setTimeout(() => {
-                        gameOverTitle.innerText = "Ева, вот твой рекорд 1.200.000, с прошедшим тебя, люблю тебя очень сильно❤️";
-                        musicContent.style.display = 'flex';
-                        gameOverOverlay.classList.add('active');
-                        
-                        bgAudio.play().then(() => {
-                            musicBtn.innerText = "⏸ Пауза";
-                        }).catch(e => {
-                            console.log("Автозапуск заблокирован:", e);
-                        });
-                    }, 400);
-                    return;
-                }
-
-                let count = 0;
                 for (let r = 0; r < shapeObj.matrix.length; r++) {
                     for (let c = 0; c < shapeObj.matrix[r].length; c++) {
                         if (shapeObj.matrix[r][c] === 1) {
                             grid[row + r][col + c] = shapeObj.color;
-                            count++;
                         }
                     }
                 }
-                score += count * 10;
-                clearLines();
-                updateScore();
+                renderBoard();
 
-                availableShapes[shapeObj.id] = null;
-                renderDock();
+                setTimeout(() => {
+                    gameOverTitle.innerText = "Ева, вот твой рекорд 1.200.000, с прошедшим тебя, люблю тебя очень сильно❤️";
+                    musicContent.style.display = 'flex';
+                    gameOverOverlay.classList.add('active');
+                    
+                    bgAudio.play().then(() => {
+                        musicBtn.innerText = "⏸ Пауза";
+                    }).catch(e => console.log(e));
+                }, 400);
+                return;
+            }
 
-                if (availableShapes.every(s => s === null)) {
-                    spawnShapes();
-                } else {
-                    checkGameOver();
+            let count = 0;
+            for (let r = 0; r < shapeObj.matrix.length; r++) {
+                for (let c = 0; c < shapeObj.matrix[r].length; c++) {
+                    if (shapeObj.matrix[r][c] === 1) {
+                        grid[row + r][col + c] = shapeObj.color;
+                        count++;
+                    }
                 }
+            }
+            score += count * 10;
+            clearLines();
+            updateScore();
+
+            availableShapes[shapeObj.id] = null;
+            renderDock();
+
+            if (availableShapes.every(s => s === null)) {
+                spawnShapes();
+            } else {
+                checkGameOver();
             }
         }
         renderBoard();
