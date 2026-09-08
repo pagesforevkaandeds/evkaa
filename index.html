@@ -109,21 +109,29 @@
             font-size: 13px;
             font-weight: bold;
             color: #ffcc00;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-align: center;
             line-height: 1.4;
+        }
+
+        .music-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
         }
 
         .btn-music {
             background-color: #3b3b58;
             color: #ffcc00;
             border: 2px solid #ffcc00;
-            padding: 8px 18px;
-            font-size: 13px;
+            padding: 7px 16px;
+            font-size: 12px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             transition: transform 0.1s, background-color 0.2s;
         }
@@ -131,12 +139,29 @@
             transform: scale(0.95);
         }
 
+        /* Ползунок громкости */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #aaa;
+            background: rgba(255,255,255,0.05);
+            padding: 5px 12px;
+            border-radius: 8px;
+        }
+        .volume-slider {
+            width: 100px;
+            accent-color: #ffcc00;
+            cursor: pointer;
+        }
+
         .btn-restart {
             background-color: #ff5f95;
             color: white;
             border: none;
-            padding: 11px 26px;
-            font-size: 14px;
+            padding: 10px 24px;
+            font-size: 13px;
             font-weight: bold;
             border-radius: 12px;
             cursor: pointer;
@@ -150,7 +175,6 @@
 </head>
 <body>
 
-    <!-- Положи файл песни рядом с HTML и назови его song.mp3 (или измени имя здесь) -->
     <audio id="bgAudio" src="song.mp3" preload="auto" loop></audio>
 
     <div class="header">
@@ -165,7 +189,13 @@
             
             <div id="musicContent" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
-                <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
+                <div class="music-controls">
+                    <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
+                    <div class="volume-container">
+                        <span>🔊 Громкость:</span>
+                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+                    </div>
+                </div>
             </div>
 
             <button class="btn-restart" id="restartBtn">ЗАНОВО</button>
@@ -180,7 +210,7 @@
 
 <script>
 const GRID_SIZE = 8;
-const CELL_SIZE = 40;
+const CELL_SIZE = 42; // Чуть увеличили для точности сетки
 const COLORS = [
     '#ff5f95',
     '#5fb4ff',
@@ -230,7 +260,12 @@ const gameOverTitle = document.getElementById('gameOverTitle');
 const musicContent = document.getElementById('musicContent');
 const restartBtn = document.getElementById('restartBtn');
 const musicBtn = document.getElementById('musicBtn');
+const volumeSlider = document.getElementById('volumeSlider');
 const bgAudio = document.getElementById('bgAudio');
+
+// Установка размера холста под новые ячейки
+canvas.width = GRID_SIZE * CELL_SIZE;
+canvas.height = GRID_SIZE * CELL_SIZE;
 
 function initGame() {
     bgAudio.pause();
@@ -247,6 +282,7 @@ function initGame() {
     spawnShapes();
 }
 
+// Управление музыкой и громкостью
 musicBtn.addEventListener('click', () => {
     if (bgAudio.paused) {
         bgAudio.play().then(() => {
@@ -256,6 +292,10 @@ musicBtn.addEventListener('click', () => {
         bgAudio.pause();
         musicBtn.innerText = "🎵 Включить песню";
     }
+});
+
+volumeSlider.addEventListener('input', (e) => {
+    bgAudio.volume = e.target.value;
 });
 
 function updateScore() {
@@ -412,7 +452,8 @@ function initDragAndDrop(element, shapeObj) {
         clone.style.position = 'fixed';
         clone.style.zIndex = '1000';
         clone.style.pointerEvents = 'none';
-        clone.style.transform = 'scale(1.2) translateY(-30px)';
+        // ИСПРАВЛЕНИЕ БАГА: поднимаем фигуру выше пальца, чтобы она не перекрывалась и вставала точно в сетку
+        clone.style.transform = 'scale(1.1) translateY(-60px)';
         document.body.appendChild(clone);
         moveAt(clientX, clientY);
     }
@@ -420,13 +461,14 @@ function initDragAndDrop(element, shapeObj) {
     function moveAt(clientX, clientY) {
         if (!clone) return;
         clone.style.left = (clientX - 45) + 'px';
-        clone.style.top = (clientY - 45) + 'px';
+        clone.style.top = (clientY - 60) + 'px';
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = clientY - boardRect.top;
+        // Учитываем смещение пальца (-60px), чтобы подсветка совпадала с реальным положением блока
+        let y = (clientY - 60) - boardRect.top;
 
-        let cellPx = canvas.width / GRID_SIZE;
+        let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
         let row = Math.floor(y / cellPx);
 
@@ -453,8 +495,8 @@ function initDragAndDrop(element, shapeObj) {
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = clientY - boardRect.top;
-        let cellPx = canvas.width / GRID_SIZE;
+        let y = (clientY - 60) - boardRect.top;
+        let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
         let row = Math.floor(y / cellPx);
 
@@ -574,9 +616,6 @@ function clearLines() {
 }
 
 restartBtn.addEventListener('click', initGame);
-
-canvas.width = GRID_SIZE * CELL_SIZE;
-canvas.height = GRID_SIZE * CELL_SIZE;
 
 initGame();
 renderBoard();
