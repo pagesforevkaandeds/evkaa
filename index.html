@@ -43,7 +43,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        /* Постоянная панель громкости наверху, чтобы она ВСЕГДА была видна */
         .top-volume-panel {
             display: flex;
             align-items: center;
@@ -162,7 +161,6 @@
 
     <div class="header">
         <div class="score-board" id="scoreDisplay">СЧЕТ: 0</div>
-        <!-- Ползунок вынесен наверх, чтобы он гарантированно отображался -->
         <div class="top-volume-panel">
             <span>🔊 Громкость:</span>
             <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
@@ -430,11 +428,12 @@ function initDragAndDrop(element, shapeObj) {
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
-        const ghostCell = CELL_SIZE; // Рисуем строго в масштабе игровых клеток
+        const ghostCell = CELL_SIZE; 
         
         let startX = (140 - cols * ghostCell) / 2;
         let startY = (140 - rows * ghostCell) / 2;
 
+        // Рисуем блоки без заднего фона (прозрачный холст)
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 if (matrix[r][c] === 1) {
@@ -449,8 +448,10 @@ function initDragAndDrop(element, shapeObj) {
         dragGhost.style.position = 'fixed';
         dragGhost.style.zIndex = '1000';
         dragGhost.style.pointerEvents = 'none';
-        // Смещаем плавающий элемент выше пальца, чтобы фигура была полностью видна
-        dragGhost.style.transform = 'translate(-50%, -130%)';
+        // Делаем фигуру полупрозрачной при перетаскивании
+        dragGhost.style.opacity = '0.75';
+        // Центрируем фигуру точно под пальцем/курсором без смещения вверх
+        dragGhost.style.transform = 'translate(-50%, -50%)';
         document.body.appendChild(dragGhost);
 
         moveAt(clientX, clientY);
@@ -462,9 +463,8 @@ function initDragAndDrop(element, shapeObj) {
         dragGhost.style.top = clientY + 'px';
 
         const boardRect = canvas.getBoundingClientRect();
-        // Точный расчет координат относительно игровой доски
         let x = clientX - boardRect.left;
-        let y = clientY - boardRect.top - 60; // Компенсация смещения пальца
+        let y = clientY - boardRect.top;
 
         let col = Math.floor(x / CELL_SIZE);
         let row = Math.floor(y / CELL_SIZE);
@@ -490,7 +490,7 @@ function initDragAndDrop(element, shapeObj) {
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = clientY - boardRect.top - 60;
+        let y = clientY - boardRect.top;
 
         let col = Math.floor(x / CELL_SIZE);
         let row = Math.floor(y / CELL_SIZE);
