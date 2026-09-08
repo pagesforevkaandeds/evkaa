@@ -25,7 +25,7 @@
             touch-action: none;
         }
         .header {
-            margin-top: 10px;
+            margin-top: 15px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -43,21 +43,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .top-volume-panel {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 5px 12px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .volume-slider {
-            width: 100px;
-            accent-color: #ffcc00;
-            cursor: pointer;
-        }
 
         .game-container {
             position: relative;
@@ -65,7 +50,7 @@
             border-radius: 16px;
             padding: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin: 10px 0;
+            margin: 15px 0;
         }
         canvas {
             display: block;
@@ -127,21 +112,63 @@
             font-size: 13px;
             font-weight: bold;
             color: #ffcc00;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
         }
-        .btn-music {
-            background-color: #3b3b58;
-            color: #ffcc00;
-            border: 2px solid #ffcc00;
-            padding: 8px 18px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
+
+        /* Кастомный музыкальный плеер */
+        .custom-player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            padding: 12px 18px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 85%;
         }
+        .player-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-music-play {
+            background-color: #ffcc00;
+            color: #181824;
+            border: none;
+            width: 36px;
+            height: 36px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(255, 204, 0, 0.4);
+            transition: transform 0.1s ease;
+        }
+        .btn-music-play:active {
+            transform: scale(0.92);
+        }
+        .player-volume-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #ddd;
+        }
+        .volume-slider {
+            width: 90px;
+            accent-color: #ffcc00;
+            cursor: pointer;
+        }
+
         .btn-restart {
             background-color: #ff5f95;
             color: white;
@@ -161,10 +188,6 @@
 
     <div class="header">
         <div class="score-board" id="scoreDisplay">СЧЕТ: 0</div>
-        <div class="top-volume-panel">
-            <span>🔊 Громкость:</span>
-            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
-        </div>
     </div>
 
     <div class="game-container" id="gameContainer">
@@ -175,7 +198,17 @@
             
             <div id="musicContent" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
-                <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
+                
+                <!-- Кастомный плеер -->
+                <div class="custom-player">
+                    <div class="player-controls-row">
+                        <button class="btn-music-play" id="musicBtn">▶</button>
+                        <div class="player-volume-wrapper">
+                            <span>🔊</span>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <button class="btn-restart" id="restartBtn">ЗАНОВО</button>
@@ -191,8 +224,6 @@
 <script>
 const GRID_SIZE = 8;
 const CELL_SIZE = 42;
-
-// Песня теперь начинается с 45 секунды
 const AUDIO_START_TIME = 45; 
 
 const COLORS = [
@@ -214,7 +245,7 @@ const SHAPES = [
     [[1, 1, 1], [1, 0, 0], [1, 0, 0]]
 ];
 
-// Новое красивое и правильное сердечко
+// Нормальное симметричное сердечко
 const HEART_SHAPE = {
     matrix: [
         [0, 1, 0, 1, 0],
@@ -256,7 +287,7 @@ function initGame() {
     updateScore();
     gameOverOverlay.classList.remove('active');
     musicContent.style.display = 'none';
-    musicBtn.innerText = "🎵 Включить песню";
+    musicBtn.innerText = "▶";
     
     spawnShapes();
 }
@@ -267,11 +298,11 @@ musicBtn.addEventListener('click', () => {
             bgAudio.currentTime = AUDIO_START_TIME;
         }
         bgAudio.play().then(() => {
-            musicBtn.innerText = "⏸ Пауза";
-        }).catch(e => console.log("Ошибка:", e));
+            musicBtn.innerText = "⏸";
+        }).catch(e => console.log("Ошибка воспроизведения:", e));
     } else {
         bgAudio.pause();
-        musicBtn.innerText = "🎵 Включить песню";
+        musicBtn.innerText = "▶";
     }
 });
 
@@ -356,7 +387,6 @@ function renderDock() {
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
-        // Для сердечка делаем блоки миниатюрнее, чтобы оно красиво помещалось в слот
         const miniCell = shapeObj.isHeart ? 13 : 18;
         
         let startX = (80 - cols * miniCell) / 2;
@@ -526,7 +556,7 @@ function initDragAndDrop(element, shapeObj) {
                     
                     bgAudio.currentTime = AUDIO_START_TIME;
                     bgAudio.play().then(() => {
-                        musicBtn.innerText = "⏸ Пауза";
+                        musicBtn.innerText = "⏸";
                     }).catch(e => console.log(e));
                 }, 400);
                 return;
