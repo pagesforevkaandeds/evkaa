@@ -139,7 +139,6 @@
             transform: scale(0.95);
         }
 
-        /* Ползунок громкости */
         .volume-container {
             display: flex;
             align-items: center;
@@ -210,7 +209,7 @@
 
 <script>
 const GRID_SIZE = 8;
-const CELL_SIZE = 42; // Чуть увеличили для точности сетки
+const CELL_SIZE = 42;
 const COLORS = [
     '#ff5f95',
     '#5fb4ff',
@@ -263,7 +262,6 @@ const musicBtn = document.getElementById('musicBtn');
 const volumeSlider = document.getElementById('volumeSlider');
 const bgAudio = document.getElementById('bgAudio');
 
-// Установка размера холста под новые ячейки
 canvas.width = GRID_SIZE * CELL_SIZE;
 canvas.height = GRID_SIZE * CELL_SIZE;
 
@@ -282,7 +280,6 @@ function initGame() {
     spawnShapes();
 }
 
-// Управление музыкой и громкостью
 musicBtn.addEventListener('click', () => {
     if (bgAudio.paused) {
         bgAudio.play().then(() => {
@@ -440,33 +437,53 @@ function checkGameOver() {
 
 function initDragAndDrop(element, shapeObj) {
     let isDragging = false;
-    let clone = null;
+    let dragGhost = null;
 
     function startDrag(clientX, clientY) {
         if (isGameWon) return;
         isDragging = true;
         element.style.opacity = '0';
 
-        clone = element.cloneNode(true);
-        clone.style.opacity = '1';
-        clone.style.position = 'fixed';
-        clone.style.zIndex = '1000';
-        clone.style.pointerEvents = 'none';
-        // ИСПРАВЛЕНИЕ БАГА: поднимаем фигуру выше пальца, чтобы она не перекрывалась и вставала точно в сетку
-        clone.style.transform = 'scale(1.1) translateY(-60px)';
-        document.body.appendChild(clone);
+        dragGhost = document.createElement('canvas');
+        dragGhost.width = 90;
+        dragGhost.height = 90;
+        const gCtx = dragGhost.getContext('2d');
+
+        const matrix = shapeObj.matrix;
+        const rows = matrix.length;
+        const cols = matrix[0].length;
+        const miniCell = shapeObj.isHeart ? 14 : 20;
+        let startX = (90 - cols * miniCell) / 2;
+        let startY = (90 - rows * miniCell) / 2;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (matrix[r][c] === 1) {
+                    gCtx.fillStyle = shapeObj.color;
+                    gCtx.beginPath();
+                    gCtx.roundRect(startX + c * miniCell + 1, startY + r * miniCell + 1, miniCell - 2, miniCell - 2, 3);
+                    gCtx.fill();
+                }
+            }
+        }
+
+        dragGhost.style.position = 'fixed';
+        dragGhost.style.zIndex = '1000';
+        dragGhost.style.pointerEvents = 'none';
+        dragGhost.style.transform = 'scale(1.15) translateY(-65px)';
+        document.body.appendChild(dragGhost);
+
         moveAt(clientX, clientY);
     }
 
     function moveAt(clientX, clientY) {
-        if (!clone) return;
-        clone.style.left = (clientX - 45) + 'px';
-        clone.style.top = (clientY - 60) + 'px';
+        if (!dragGhost) return;
+        dragGhost.style.left = (clientX - 45) + 'px';
+        dragGhost.style.top = (clientY - 65) + 'px';
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        // Учитываем смещение пальца (-60px), чтобы подсветка совпадала с реальным положением блока
-        let y = (clientY - 60) - boardRect.top;
+        let y = (clientY - 65) - boardRect.top;
 
         let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
@@ -487,15 +504,15 @@ function initDragAndDrop(element, shapeObj) {
     function endDrag(clientX, clientY) {
         if (!isDragging) return;
         isDragging = false;
-        if (clone) {
-            clone.remove();
-            clone = null;
+        if (dragGhost) {
+            dragGhost.remove();
+            dragGhost = null;
         }
         element.style.opacity = '1';
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = (clientY - 60) - boardRect.top;
+        let y = (clientY - 65) - boardRect.top;
         let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
         let row = Math.floor(y / cellPx);
