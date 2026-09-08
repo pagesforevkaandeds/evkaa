@@ -143,14 +143,15 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 11px;
-            color: #aaa;
-            background: rgba(255,255,255,0.05);
-            padding: 5px 12px;
-            border-radius: 8px;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+            padding: 6px 14px;
+            border-radius: 10px;
+            margin-top: 5px;
         }
         .volume-slider {
-            width: 100px;
+            width: 110px;
             accent-color: #ffcc00;
             cursor: pointer;
         }
@@ -190,13 +191,15 @@
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
                 <div class="music-controls">
                     <button class="btn-music" id="musicBtn">🎵 Включить песню</button>
-                    <div class="volume-container">
-                        <span>🔊 Громкость:</span>
-                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
-                    </div>
                 </div>
             </div>
 
+            <!-- Ползунок громкости теперь всегда виден на экране победы/поражения -->
+            <div class="volume-container">
+                <span>🔊 Громкость:</span>
+                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+            </div>
+            <br>
             <button class="btn-restart" id="restartBtn">ЗАНОВО</button>
         </div>
     </div>
@@ -444,24 +447,27 @@ function initDragAndDrop(element, shapeObj) {
         isDragging = true;
         element.style.opacity = '0';
 
+        // Создаем плавающий холст с чистой фигурой (без рамок слота и фона)
         dragGhost = document.createElement('canvas');
-        dragGhost.width = 90;
-        dragGhost.height = 90;
+        dragGhost.width = 120;
+        dragGhost.height = 120;
         const gCtx = dragGhost.getContext('2d');
 
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
-        const miniCell = shapeObj.isHeart ? 14 : 20;
-        let startX = (90 - cols * miniCell) / 2;
-        let startY = (90 - rows * miniCell) / 2;
+        // Используем размер ячеек, приближенный к игровому полю для красоты
+        const ghostCell = shapeObj.isHeart ? 16 : 28;
+        
+        let startX = (120 - cols * ghostCell) / 2;
+        let startY = (120 - rows * ghostCell) / 2;
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 if (matrix[r][c] === 1) {
                     gCtx.fillStyle = shapeObj.color;
                     gCtx.beginPath();
-                    gCtx.roundRect(startX + c * miniCell + 1, startY + r * miniCell + 1, miniCell - 2, miniCell - 2, 3);
+                    gCtx.roundRect(startX + c * ghostCell + 2, startY + r * ghostCell + 2, ghostCell - 4, ghostCell - 4, 6);
                     gCtx.fill();
                 }
             }
@@ -470,7 +476,8 @@ function initDragAndDrop(element, shapeObj) {
         dragGhost.style.position = 'fixed';
         dragGhost.style.zIndex = '1000';
         dragGhost.style.pointerEvents = 'none';
-        dragGhost.style.transform = 'scale(1.15) translateY(-65px)';
+        // Поднимаем фигуру выше пальца/курсора, чтобы она не закрывалась рукой
+        dragGhost.style.transform = 'translate(-50%, -120%)';
         document.body.appendChild(dragGhost);
 
         moveAt(clientX, clientY);
@@ -478,12 +485,13 @@ function initDragAndDrop(element, shapeObj) {
 
     function moveAt(clientX, clientY) {
         if (!dragGhost) return;
-        dragGhost.style.left = (clientX - 45) + 'px';
-        dragGhost.style.top = (clientY - 65) + 'px';
+        dragGhost.style.left = clientX + 'px';
+        dragGhost.style.top = clientY + 'px';
 
         const boardRect = canvas.getBoundingClientRect();
+        // Учитываем смещение по вертикали для точного попадания в сетку
         let x = clientX - boardRect.left;
-        let y = (clientY - 65) - boardRect.top;
+        let y = (clientY - 70) - boardRect.top;
 
         let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
@@ -492,7 +500,7 @@ function initDragAndDrop(element, shapeObj) {
         col -= Math.floor(shapeObj.matrix[0].length / 2);
         row -= Math.floor(shapeObj.matrix.length / 2);
 
-        if (x >= 0 && x <= boardRect.width && y >= 0 && y <= boardRect.height) {
+        if (x >= -20 && x <= boardRect.width + 20 && y >= -20 && y <= boardRect.height + 20) {
             if (fnCanPlace(shapeObj.matrix, row, col)) {
                 renderBoard(shapeObj.matrix, row, col, shapeObj.color);
                 return;
@@ -512,7 +520,7 @@ function initDragAndDrop(element, shapeObj) {
 
         const boardRect = canvas.getBoundingClientRect();
         let x = clientX - boardRect.left;
-        let y = (clientY - 65) - boardRect.top;
+        let y = (clientY - 70) - boardRect.top;
         let cellPx = CELL_SIZE;
         let col = Math.floor(x / cellPx);
         let row = Math.floor(y / cellPx);
@@ -520,7 +528,7 @@ function initDragAndDrop(element, shapeObj) {
         col -= Math.floor(shapeObj.matrix[0].length / 2);
         row -= Math.floor(shapeObj.matrix.length / 2);
 
-        if (x >= 0 && x <= boardRect.width && y >= 0 && y <= boardRect.height) {
+        if (x >= -20 && x <= boardRect.width + 20 && y >= -20 && y <= boardRect.height + 20) {
             if (fnCanPlace(shapeObj.matrix, row, col)) {
                 
                 if (shapeObj.isHeart) {
@@ -545,7 +553,7 @@ function initDragAndDrop(element, shapeObj) {
                         bgAudio.play().then(() => {
                             musicBtn.innerText = "⏸ Пауза";
                         }).catch(e => {
-                            console.log("Автозапуск заблокирован, нажмите кнопку вручную:", e);
+                            console.log("Автозапуск заблокирован:", e);
                         });
                     }, 400);
                     return;
