@@ -192,8 +192,8 @@
 const GRID_SIZE = 8;
 const CELL_SIZE = 42;
 
-// С КАКОЙ СЕКУНДЫ ДОЛЖНА НАЧИНАТЬСЯ ПЕСНЯ (измени 0 на нужное число, например: 15.5)
-const AUDIO_START_TIME = 0; 
+// Песня теперь начинается с 45 секунды
+const AUDIO_START_TIME = 45; 
 
 const COLORS = [
     '#ff5f95', '#5fb4ff', '#5fff8c', '#ffd75f', '#c35fff', '#ff8c5f'
@@ -214,6 +214,7 @@ const SHAPES = [
     [[1, 1, 1], [1, 0, 0], [1, 0, 0]]
 ];
 
+// Новое красивое и правильное сердечко
 const HEART_SHAPE = {
     matrix: [
         [0, 1, 0, 1, 0],
@@ -247,7 +248,7 @@ canvas.height = GRID_SIZE * CELL_SIZE;
 
 function initGame() {
     bgAudio.pause();
-    bgAudio.currentTime = AUDIO_START_TIME; // Сбрасываем на нужную секунду при рестарте
+    bgAudio.currentTime = AUDIO_START_TIME;
 
     grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
     score = 0;
@@ -262,7 +263,6 @@ function initGame() {
 
 musicBtn.addEventListener('click', () => {
     if (bgAudio.paused) {
-        // Убедимся, что при включении аудио установлено нужное время стартовой позиции
         if (bgAudio.currentTime < AUDIO_START_TIME) {
             bgAudio.currentTime = AUDIO_START_TIME;
         }
@@ -356,6 +356,7 @@ function renderDock() {
         const matrix = shapeObj.matrix;
         const rows = matrix.length;
         const cols = matrix[0].length;
+        // Для сердечка делаем блоки миниатюрнее, чтобы оно красиво помещалось в слот
         const miniCell = shapeObj.isHeart ? 13 : 18;
         
         let startX = (80 - cols * miniCell) / 2;
@@ -429,8 +430,8 @@ function initDragAndDrop(element, shapeObj) {
         element.style.opacity = '0';
 
         dragGhost = document.createElement('canvas');
-        dragGhost.width = 140;
-        dragGhost.height = 140;
+        dragGhost.width = 160;
+        dragGhost.height = 160;
         const gCtx = dragGhost.getContext('2d');
 
         const matrix = shapeObj.matrix;
@@ -438,8 +439,8 @@ function initDragAndDrop(element, shapeObj) {
         const cols = matrix[0].length;
         const ghostCell = CELL_SIZE; 
         
-        let startX = (140 - cols * ghostCell) / 2;
-        let startY = (140 - rows * ghostCell) / 2;
+        let startX = (160 - cols * ghostCell) / 2;
+        let startY = (160 - rows * ghostCell) / 2;
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -523,7 +524,6 @@ function initDragAndDrop(element, shapeObj) {
                     musicContent.style.display = 'flex';
                     gameOverOverlay.classList.add('active');
                     
-                    // Устанавливаем время перед автозапуском при победе
                     bgAudio.currentTime = AUDIO_START_TIME;
                     bgAudio.play().then(() => {
                         musicBtn.innerText = "⏸ Пауза";
