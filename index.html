@@ -76,7 +76,9 @@
             justify-content: center;
             position: relative;
         }
-        .game-over-overlay {
+
+        /* Главное меню и Оверлей конца игры */
+        .overlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -90,16 +92,49 @@
             align-items: center;
             justify-content: center;
             z-index: 10;
+            text-align: center;
+            padding: 20px;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
-            text-align: center;
-            padding: 20px;
         }
-        .game-over-overlay.active {
+        .overlay.active {
             opacity: 1;
             pointer-events: auto;
         }
+
+        .menu-subtitle {
+            font-size: 15px;
+            font-weight: bold;
+            color: #5fff8c;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .menu-warning {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            max-width: 260px;
+            text-align: center;
+        }
+        .btn-start {
+            background-color: #ff5f95;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 95, 149, 0.4);
+            transition: transform 0.1s ease;
+        }
+        .btn-start:active {
+            transform: scale(0.95);
+        }
+
         .game-over-title {
             font-size: 14px;
             font-weight: bold;
@@ -151,10 +186,6 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 8px rgba(255, 204, 0, 0.4);
-            transition: transform 0.1s ease;
-        }
-        .btn-music-play:active {
-            transform: scale(0.92);
         }
         .player-volume-wrapper {
             display: flex;
@@ -167,18 +198,6 @@
             width: 90px;
             accent-color: #ffcc00;
             cursor: pointer;
-        }
-
-        .btn-restart {
-            background-color: #ff5f95;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 95, 149, 0.4);
         }
     </style>
 </head>
@@ -193,13 +212,20 @@
     <div class="game-container" id="gameContainer">
         <canvas id="boardCanvas" width="336" height="336"></canvas>
         
-        <div class="game-over-overlay" id="gameOverOverlay">
+        <!-- Главное меню -->
+        <div class="overlay active" id="mainMenuOverlay">
+            <div class="menu-subtitle">Евка, поиграй чуток отдохни</div>
+            <div class="menu-warning">Евка, лучше одень наушники или до начало убавь громкость</div>
+            <button class="btn-start" id="startBtn">НАЧАТЬ</button>
+        </div>
+
+        <!-- Оверлей окончания игры / победы -->
+        <div class="overlay" id="gameOverOverlay">
             <div class="game-over-title" id="gameOverTitle">ИГРА ОКОНЧЕНА</div>
             
             <div id="musicContent" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <div class="music-prompt">А теперь послушай свою любимую песню</div>
                 
-                <!-- Кастомный плеер с громкостью 50% по умолчанию -->
                 <div class="custom-player">
                     <div class="player-controls-row">
                         <button class="btn-music-play" id="musicBtn">▶</button>
@@ -211,7 +237,7 @@
                 </div>
             </div>
 
-            <button class="btn-restart" id="restartBtn">ЗАНОВО</button>
+            <button class="btn-start" id="restartBtn">ЗАНОВО</button>
         </div>
     </div>
 
@@ -261,37 +287,42 @@ let grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
 let score = 0;
 let availableShapes = [null, null, null];
 let isGameWon = false;
+let gameStarted = false;
 
 const canvas = document.getElementById('boardCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('scoreDisplay');
+const mainMenuOverlay = document.getElementById('mainMenuOverlay');
 const gameOverOverlay = document.getElementById('gameOverOverlay');
 const gameOverTitle = document.getElementById('gameOverTitle');
 const musicContent = document.getElementById('musicContent');
+const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 const musicBtn = document.getElementById('musicBtn');
 const volumeSlider = document.getElementById('volumeSlider');
 const bgAudio = document.getElementById('bgAudio');
 
-// Устанавливаем громкость аудио на 50% при старте
 bgAudio.volume = 0.5;
-
 canvas.width = GRID_SIZE * CELL_SIZE;
 canvas.height = GRID_SIZE * CELL_SIZE;
 
-function initGame() {
+function startGame() {
     bgAudio.pause();
     bgAudio.currentTime = AUDIO_START_TIME;
 
     grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
     score = 0;
     isGameWon = false;
+    gameStarted = true;
     updateScore();
+    
+    mainMenuOverlay.classList.remove('active');
     gameOverOverlay.classList.remove('active');
     musicContent.style.display = 'none';
     musicBtn.innerText = "▶";
     
     spawnShapes();
+    renderBoard();
 }
 
 musicBtn.addEventListener('click', () => {
@@ -429,7 +460,7 @@ let fnCanPlace = function(matrix, row, col) {
 }
 
 function checkGameOver() {
-    if (isGameWon) return;
+    if (!gameStarted || isGameWon) return;
     let hasMoves = false;
     for (let shapeObj of availableShapes) {
         if (!shapeObj) continue;
@@ -457,7 +488,7 @@ function initDragAndDrop(element, shapeObj) {
     let dragGhost = null;
 
     function startDrag(clientX, clientY) {
-        if (isGameWon) return;
+        if (!gameStarted || isGameWon) return;
         isDragging = true;
         element.style.opacity = '0';
 
@@ -644,9 +675,9 @@ function clearLines() {
     }
 }
 
-restartBtn.addEventListener('click', initGame);
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
 
-initGame();
 renderBoard();
 </script>
 
